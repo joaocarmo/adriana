@@ -78,10 +78,23 @@ job holding the secrets.
 | `CONTACT_EMAIL`   | her e-mail address                                             |
 | `ASSETS_KEY`      | passphrase for the encrypted photograph — `openssl rand -base64 32` |
 
-Optional environment *variable* `SITE_URL` (e.g. `https://exemplo.pt`) sets the
-canonical and share-preview URLs; without it the GitHub Pages URL is used. Set
-it once the domain is connected, and add a `public/CNAME` file containing the
-domain.
+Environment *variable* `SITE_URL` (currently `https://adrianaazevedo.pt`) sets
+the canonical and share-preview URLs; without it the GitHub Pages URL is used.
+**It must be updated whenever the domain changes** — a stale value leaves a
+canonical tag pointing at the old address, which tells search engines the page
+lives somewhere else.
+
+No `CNAME` file is needed: with Actions-based publishing the custom domain is
+stored in the Pages settings, not in the artifact.
+
+DNS (Cloudflare, all records **DNS only** — proxying breaks GitHub's
+certificate issuance):
+
+| Type       | Name  | Value                                                  |
+| ---------- | ----- | ------------------------------------------------------ |
+| A × 4      | `@`   | `185.199.108.153` … `.111.153`                          |
+| AAAA × 4   | `@`   | `2606:50c0:8000::153` … `:8003::153`                    |
+| CNAME      | `www` | `joaocarmo.github.io`                                   |
 
 The deploy job stays on the `github-pages` environment, which GitHub Pages
 requires. It needs no secrets — only the artifact the build job produced.
