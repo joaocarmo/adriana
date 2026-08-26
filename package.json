@@ -1,0 +1,17 @@
+{
+  "name": "adriana",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Single-page site for Adriana, explicadora in Porto (Paranhos)",
+  "license": "MIT",
+  "scripts": {
+    "build": "./scripts/build.sh",
+    "start": "npm run build && python3 -m http.server -d dist",
+    "serve": "python3 -m http.server -d dist --bind 0.0.0.0",
+    "check": "npm run check:contact && npm run check:html && npm run check:a11y",
+    "check:contact": "node --env-file-if-exists=.env scripts/check-contact.mjs",
+    "check:html": "npx --yes html-validate dist/index.html",
+    "check:a11y": "python3 -m http.server 8080 -d dist & SRV=$!; sleep 2; npx --yes pa11y-ci --config .pa11yci.json; RC=$?; kill $SRV; exit $RC",
+    "test": "npm run build && npm run check"
+  }
+}

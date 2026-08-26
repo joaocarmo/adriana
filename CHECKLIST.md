@@ -13,7 +13,7 @@ Everything that must be true before the page goes public. Sources: REQUIREMENTS.
 
 ## Assets
 
-- [ ] Placeholder photo replaced with Adriana's real photograph, with her consent (R P-4)
+- [x] Placeholder photo replaced with Adriana's real photograph (R P-4) — committed encrypted as `assets/photo.jpg.enc`; confirm her consent is on record
 - [x] Share-preview (Open Graph) image produced with name/offer — text graphic at `public/og-image.png` (R Q-6)
 - [x] Favicon set (both colourways, theme-aware SVG) committed under `public/` and referenced from the page (D §6)
 

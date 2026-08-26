@@ -136,7 +136,9 @@ address { font-style: normal; }
   width: 100%;
   min-height: 48px;
   padding: calc(1.5 * var(--space)) calc(3 * var(--space));
-  border: 0;
+  /* Transparent border rather than none, so both buttons share a box model
+     and end up exactly the same height. */
+  border: 2px solid transparent;
   border-radius: var(--radius);
   background: var(--cta-whatsapp);
   color: #FFFFFF;
@@ -159,6 +161,7 @@ address { font-style: normal; }
   background: transparent;
   color: var(--accent);
   font: inherit;
+  font-size: 1.1875rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -195,8 +198,9 @@ footer {
   section, footer { padding: calc(9 * var(--space)) calc(3 * var(--space)); }
   .note, .facts, footer { font-size: 0.9375rem; }
   .photo { width: 220px; }
-  /* Buttons stop stretching once there is room for a comfortable line length. */
-  .cta, .cta-secondary { width: auto; min-width: 18rem; }
-  .cta { display: inline-flex; }
+  /* A button with width:auto shrinks to its own label, so the two would size
+     independently. Give them one explicit width and they stay identical. */
+  .cta, .cta-secondary { width: 20rem; max-width: 100%; }
+  .cta { display: flex; }
   .cta-secondary { margin-top: calc(2 * var(--space)); }
 }

@@ -22,15 +22,27 @@ scripts/assets.sh  encrypts/decrypts Adriana's photograph
 
 ## Local preview
 
-The contact details are required, so the build fails rather than shipping a
-placeholder number. Pass obvious dummies when working locally:
-
 ```sh
-WHATSAPP_NUMBER=351900000000 CONTACT_EMAIL=exemplo@exemplo.pt ./scripts/build.sh
-python3 -m http.server -d dist
+cp .env.example .env    # first time only, then fill in ASSETS_KEY
+npm start               # builds and serves on http://localhost:8000
 ```
 
-Then open <http://localhost:8000>.
+`package.json` declares no dependencies — it only names the commands:
+
+| Command             | What it does                                       |
+| ------------------- | -------------------------------------------------- |
+| `npm run build`     | builds `dist/` and verifies it                     |
+| `npm start`         | builds, then serves `dist/` on port 8000           |
+| `npm run serve`     | serves on the LAN too, for testing on a real phone |
+| `npm test`          | build plus all three checks                        |
+| `npm run check`     | contact links, HTML validity, accessibility        |
+
+`build.sh` reads `.env` if it is there, so the plain `./scripts/build.sh` works
+the same way. Anything already exported wins over `.env`, and CI — which has no
+`.env` — is unaffected.
+
+The contact details are required either way: the build fails rather than ship a
+placeholder number, which is why `.env` carries obvious dummies.
 
 ## Deployment
 
@@ -53,16 +65,17 @@ domain is connected, and add a `public/CNAME` file containing the domain.
 
 - **Prices, hours, copy:** edit `public/index.html`. The prices live in the
   `Preços` section and appear nowhere else.
-- **Adriana's photograph** (required before launch — the page must not go
-  public with the placeholder):
+- **Adriana's photograph:** already in place as `assets/photo.jpg.enc`. The
+  build decrypts it to `photo.jpg` and switches the `<img>` over automatically,
+  alt text included; the plaintext is never committed. To replace it:
 
   ```sh
-  ASSETS_KEY='<the secret>' ./scripts/assets.sh encrypt ~/path/to/photo.jpg photo.jpg
-  git add assets/photo.jpg.enc
+  ./scripts/assets.sh encrypt ~/path/to/new-photo.jpg photo.jpg
   ```
 
-  The build decrypts it to `photo.jpg` and switches the `<img>` over
-  automatically, alt text included. The plaintext file is never committed.
+  Crop it square first — it is displayed at 180–220 px, so about 440 × 440 is
+  plenty. Because `assets/` is no longer empty, **a build without `ASSETS_KEY`
+  now fails** rather than quietly falling back to the placeholder.
 - **Icons:** the icon set under `public/` is committed. It was generated once
   with a local script (`generate_favicon.py`, deliberately not in the repo)
   from Nunito Sans Bold, in both colourways.
@@ -83,9 +96,10 @@ call to action that silently does nothing.
 ## Checks
 
 ```sh
-node scripts/check-contact.mjs          # both contact links resolve (needs the env vars)
-npx html-validate dist/index.html       # markup
-npx pa11y-ci --config .pa11yci.json     # WCAG 2.2 AA, against a served dist/
+npm test                 # build, then all three checks below
+npm run check:contact    # both contact links resolve to the right destination
+npm run check:html       # markup validity
+npm run check:a11y       # axe + HTML_CodeSniffer at WCAG2AA, against a served dist/
 ```
 
 Automated checks do not prove accessibility on their own: the manual

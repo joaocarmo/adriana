@@ -18,9 +18,25 @@ OUT=dist
 
 PLACEHOLDER_SRC=photo-placeholder.svg
 PLACEHOLDER_ALT="Fotografia provisória, a substituir pela fotografia da Adriana antes do lançamento."
-PHOTO_ALT="Adriana, explicadora, na sala de estudo onde dá as aulas."
+PHOTO_ALT="Adriana, explicadora, a sorrir para a câmara."
 
 fail() { echo "error: $*" >&2; exit 1; }
+
+# --- local convenience: .env supplies the values CI gets from secrets.
+# Anything already in the environment wins, so a one-off override still works
+# and CI (which has no .env) is unaffected.
+
+if [ -f .env ]; then
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in ''|'#'*|*!*) continue ;; esac
+    case "$line" in *=*) ;; *) continue ;; esac
+    # Split by hand: `read -r key value` with IFS='=' swallows the trailing
+    # '=' of a base64 value such as ASSETS_KEY.
+    key=${line%%=*}
+    value=${line#*=}
+    [ -n "${!key:-}" ] || export "$key=$value"
+  done < .env
+fi
 
 # --- validate inputs (they come from CI secrets, so check them, don't trust them)
 
