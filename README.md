@@ -130,6 +130,13 @@ npm run check:a11y       # axe + HTML_CodeSniffer at WCAG2AA, against a served d
 Automated checks do not prove accessibility on their own: the manual
 keyboard-only and screen-reader walkthroughs in [checklist] are part of launch.
 
+## Licence
+
+The repository is public because GitHub Pages serves free sites only from
+public repositories — not as an invitation to reuse what is in it. The code is
+MIT; the site content (the Portuguese copy, Adriana's photograph, the share
+image) is hers and all rights are reserved. See [LICENSE](LICENSE).
+
 <!-- References -->
 
 [requirements]: REQUIREMENTS.md

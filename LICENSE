@@ -1,3 +1,13 @@
+This repository is public so that it can be served by GitHub Pages. It is
+covered by two different terms: the code is open, the site content is not.
+
+================================================================================
+1. Source code — MIT License
+================================================================================
+
+Applies to the build scripts, the GitHub Actions workflow, the stylesheet, the
+JavaScript, the HTML structure, and the project documentation.
+
 MIT License
 
 Copyright (c) 2026 João Carmo
@@ -19,3 +29,22 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+================================================================================
+2. Site content — © 2026 Adriana, all rights reserved
+================================================================================
+
+The MIT License above does NOT apply to the content of the site, namely:
+
+  - all Portuguese text shown on the page, including the text adapted from
+    Adriana's own tutor profile;
+  - Adriana's photograph (assets/photo.jpg.enc, and photo.jpg as published);
+  - the share-preview image (public/og-image.png), which carries her name
+    and her offer.
+
+These are © 2026 Adriana. All rights reserved. They may not be copied,
+reproduced, adapted, republished or used to promote any other service without
+her written permission. Her photograph may not be reused for any purpose.
+
+Being able to read this repository does not grant any right to reuse the
+content in it.
