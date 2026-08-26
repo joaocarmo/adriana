@@ -1,0 +1,72 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Actions are pinned to commit SHAs: a tag can be moved, a commit cannot.
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # Declaring the environment is what makes its secrets readable here;
+    # without it, secrets.* would only see repository-level secrets.
+    environment: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # No dependencies to install — this only pins the Node version, read from
+      # .nvmrc so CI and local development cannot drift apart.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Build
+        env:
+          WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+          ASSETS_KEY: ${{ secrets.ASSETS_KEY }}
+          SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
+        run: npm run build
+
+      # Contact links resolve, and the details are not readable anywhere in the
+      # output. build.sh asserts the same thing independently.
+      - name: Check contact details
+        env:
+          WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+        run: npm run check:contact
+
+      - name: Validate HTML
+        run: npm run check:html
+
+      - name: Accessibility audit
+        run: npm run check:a11y
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # GitHub Pages requires its own environment, so this job cannot also
+    # target `production` — it needs no secrets, only the built artifact.
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
