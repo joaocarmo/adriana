@@ -31,6 +31,12 @@ npm start               # builds and serves on http://localhost:8000
 `.nvmrc` is the single source of truth for the Node version — CI reads the same
 file, so the two cannot drift.
 
+There is no code formatter, deliberately. `.editorconfig` covers indentation,
+line endings and final newlines with no dependency and no CI step; Prettier was
+tried and rejected because its output fails this repo's own HTML validation
+(it lowercases the doctype and self-closes void elements, which `html-validate`
+rejects) for no functional gain.
+
 `package.json` declares no dependencies — it only names the commands:
 
 | Command             | What it does                                       |
