@@ -1,0 +1,78 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Actions are pinned to commit SHAs: a tag can be moved, a commit cannot.
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build
+        env:
+          WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+          ASSETS_KEY: ${{ secrets.ASSETS_KEY }}
+          SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
+        run: ./scripts/build.sh
+
+      # build.sh already fails if the contact details reach dist/. This repeats
+      # the check here so a change to build.sh can never quietly remove it.
+      - name: Contact details must not be readable in the output
+        env:
+          WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+        run: |
+          digits=$(printf '%s' "$WHATSAPP_NUMBER" | tr -cd '0-9')
+          for value in "$WHATSAPP_NUMBER" "$digits" "$CONTACT_EMAIL"; do
+            if grep -rqF -- "$value" dist; then
+              echo "::error::contact details are readable in the build output"
+              exit 1
+            fi
+          done
+          echo "contact details are not present as plain text"
+
+      - name: Contact links resolve
+        env:
+          WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+        run: node scripts/check-contact.mjs
+
+      - name: Validate HTML
+        run: npx --yes html-validate dist/index.html
+
+      - name: Accessibility audit
+        run: |
+          python3 -m http.server 8080 --directory dist &
+          npx --yes wait-on -t 30000 http://127.0.0.1:8080/
+          npx --yes pa11y-ci --config .pa11yci.json
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

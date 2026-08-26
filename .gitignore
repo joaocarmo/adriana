@@ -141,3 +141,13 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Build output
+dist/
+
+# Local one-off tool: regenerates the icon set, whose outputs are committed
+# under public/. Not needed by the build or by CI.
+scripts/generate_favicon.py
+
+# Adriana's photograph is committed only as assets/photo.jpg.enc, never plain.
+/photo.jpg
