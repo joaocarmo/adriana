@@ -23,9 +23,13 @@ scripts/assets.sh  encrypts/decrypts Adriana's photograph
 ## Local preview
 
 ```sh
+nvm use                 # Node version comes from .nvmrc
 cp .env.example .env    # first time only, then fill in ASSETS_KEY
 npm start               # builds and serves on http://localhost:8000
 ```
+
+`.nvmrc` is the single source of truth for the Node version — CI reads the same
+file, so the two cannot drift.
 
 `package.json` declares no dependencies — it only names the commands:
 
@@ -49,7 +53,18 @@ placeholder number, which is why `.env` carries obvious dummies.
 Pushing to `main` builds, checks and publishes to GitHub Pages. Repository
 settings → Pages → Source must be set to **GitHub Actions**.
 
-Required secrets (Settings → Secrets and variables → Actions):
+The workflow runs the same `npm` commands you run locally, so what CI checks
+and what you check cannot drift apart.
+
+Secrets live in the **`production` environment** (Settings → Environments →
+production → Environment secrets), not in repository-wide secrets. The build
+job declares `environment: production`, which is what makes them readable — a
+job without that line sees only repository secrets. Create the environment
+first, or the build gets empty values and fails validation.
+
+Note that any protection rule you add to `production` (required reviewers, a
+wait timer) will gate every build, pull requests included, since that is the
+job holding the secrets.
 
 | Secret            | Value                                                          |
 | ----------------- | -------------------------------------------------------------- |
@@ -57,9 +72,13 @@ Required secrets (Settings → Secrets and variables → Actions):
 | `CONTACT_EMAIL`   | her e-mail address                                             |
 | `ASSETS_KEY`      | passphrase for the encrypted photograph — `openssl rand -base64 32` |
 
-Optional variable `SITE_URL` (e.g. `https://exemplo.pt`) sets the canonical and
-share-preview URLs; without it the GitHub Pages URL is used. Set it once the
-domain is connected, and add a `public/CNAME` file containing the domain.
+Optional environment *variable* `SITE_URL` (e.g. `https://exemplo.pt`) sets the
+canonical and share-preview URLs; without it the GitHub Pages URL is used. Set
+it once the domain is connected, and add a `public/CNAME` file containing the
+domain.
+
+The deploy job stays on the `github-pages` environment, which GitHub Pages
+requires. It needs no secrets — only the artifact the build job produced.
 
 ## Updating the page
 

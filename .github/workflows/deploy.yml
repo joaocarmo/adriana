@@ -17,8 +17,17 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Declaring the environment is what makes its secrets readable here;
+    # without it, secrets.* would only see repository-level secrets.
+    environment: production
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # No dependencies to install — this only pins the Node version, read from
+      # .nvmrc so CI and local development cannot drift apart.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
 
       - name: Build
         env:
@@ -26,38 +35,21 @@ jobs:
           CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
           ASSETS_KEY: ${{ secrets.ASSETS_KEY }}
           SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
-        run: ./scripts/build.sh
+        run: npm run build
 
-      # build.sh already fails if the contact details reach dist/. This repeats
-      # the check here so a change to build.sh can never quietly remove it.
-      - name: Contact details must not be readable in the output
+      # Contact links resolve, and the details are not readable anywhere in the
+      # output. build.sh asserts the same thing independently.
+      - name: Check contact details
         env:
           WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
           CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
-        run: |
-          digits=$(printf '%s' "$WHATSAPP_NUMBER" | tr -cd '0-9')
-          for value in "$WHATSAPP_NUMBER" "$digits" "$CONTACT_EMAIL"; do
-            if grep -rqF -- "$value" dist; then
-              echo "::error::contact details are readable in the build output"
-              exit 1
-            fi
-          done
-          echo "contact details are not present as plain text"
-
-      - name: Contact links resolve
-        env:
-          WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
-          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
-        run: node scripts/check-contact.mjs
+        run: npm run check:contact
 
       - name: Validate HTML
-        run: npx --yes html-validate dist/index.html
+        run: npm run check:html
 
       - name: Accessibility audit
-        run: |
-          python3 -m http.server 8080 --directory dist &
-          npx --yes wait-on -t 30000 http://127.0.0.1:8080/
-          npx --yes pa11y-ci --config .pa11yci.json
+        run: npm run check:a11y
 
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
@@ -67,6 +59,8 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    # GitHub Pages requires its own environment, so this job cannot also
+    # target `production` — it needs no secrets, only the built artifact.
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
