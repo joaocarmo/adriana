@@ -5,10 +5,9 @@
 #
 #   WHATSAPP_NUMBER=351900000000 CONTACT_EMAIL=exemplo@exemplo.pt ./scripts/build.sh
 #
-# WHATSAPP_NUMBER and CONTACT_EMAIL are required: a page that ships with a
-# placeholder number is worse than a page that fails to build.
-# SITE_URL is optional and only affects the share preview.
-# ASSETS_KEY is required only when assets/*.enc are present.
+# WHATSAPP_NUMBER, CONTACT_EMAIL and ASSETS_KEY are all required: a page that
+# ships with a stand-in number or a stand-in face is worse than a page that
+# fails to build. SITE_URL is optional and only affects the share preview.
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -16,8 +15,7 @@ cd "$(dirname "$0")/.."
 SRC=public
 OUT=dist
 
-PLACEHOLDER_SRC=photo-placeholder.svg
-PLACEHOLDER_ALT="Fotografia provisória, a substituir pela fotografia da Adriana antes do lançamento."
+PHOTO_SRC=photo.jpg
 PHOTO_ALT="Adriana, explicadora, a sorrir para a câmara."
 
 fail() { echo "error: $*" >&2; exit 1; }
@@ -76,14 +74,10 @@ for encrypted in assets/*.enc; do
 done
 shopt -u nullglob
 
-if [ -f "$OUT/photo.jpg" ]; then
-  PHOTO_SRC=photo.jpg
-  PHOTO_LABEL=$PHOTO_ALT
-else
-  PHOTO_SRC=$PLACEHOLDER_SRC
-  PHOTO_LABEL=$PLACEHOLDER_ALT
-  echo "warning: using the placeholder photograph — not fit to launch (REQUIREMENTS P-4)" >&2
-fi
+# Her photograph is required (REQUIREMENTS P-4). There is no placeholder to
+# fall back to: a build that cannot produce it must fail rather than publish a
+# page with a stand-in where her face belongs.
+[ -f "$OUT/$PHOTO_SRC" ] || fail "$PHOTO_SRC is missing — expected assets/$PHOTO_SRC.enc to decrypt into $OUT"
 
 # --- inject
 #
@@ -103,14 +97,14 @@ EMAIL_ENC=$(encode "$CONTACT_EMAIL")
 [ "$(decode "$EMAIL_ENC")" = "$CONTACT_EMAIL" ] || fail "e-mail address does not survive encoding"
 
 # sed uses | as its delimiter below, so no injected value may contain one.
-for value in "$SITE_URL" "$PHOTO_SRC" "$PHOTO_LABEL" "$WHATSAPP_ENC" "$EMAIL_ENC"; do
+for value in "$SITE_URL" "$PHOTO_SRC" "$PHOTO_ALT" "$WHATSAPP_ENC" "$EMAIL_ENC"; do
   case "$value" in *"|"*) fail "injected values must not contain a '|' character" ;; esac
 done
 
 sed -i.bak \
   -e "s|__SITE_URL__|$SITE_URL|g" \
   -e "s|__PHOTO_SRC__|$PHOTO_SRC|g" \
-  -e "s|__PHOTO_ALT__|$PHOTO_LABEL|g" \
+  -e "s|__PHOTO_ALT__|$PHOTO_ALT|g" \
   "$OUT/index.html"
 
 sed -i.bak \
