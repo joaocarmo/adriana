@@ -36,6 +36,10 @@ exported wins over it.
 Prices, hours and copy live in `public/index.html`. Adriana's photograph is
 committed encrypted and decrypted at build time — see `scripts/assets.sh`.
 
+`public/robots.txt` and `public/llms.txt` are plain static files, copied as-is.
+Keep `llms.txt` free of prices, hours and contact details: it is a second copy of
+the facts, and a stale one is worse than none.
+
 There is no code formatter, deliberately: `.editorconfig` covers whitespace,
 and Prettier's output fails this repo's own HTML validation.
 
