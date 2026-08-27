@@ -1,0 +1,10 @@
+version: 2
+
+updates:
+  # Actions are pinned to commit SHAs; Dependabot bumps the SHA and the
+  # trailing version comment together. It is the only thing here with
+  # dependencies to update — the site itself has none.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
