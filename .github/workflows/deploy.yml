@@ -17,14 +17,12 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Declaring the environment is what makes its secrets readable here;
-    # without it, secrets.* would only see repository-level secrets.
+    # Without this, secrets.* sees only repository-level secrets.
     environment: production
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # No dependencies to install — this only pins the Node version, read from
-      # .nvmrc so CI and local development cannot drift apart.
+      # Nothing to install; pins the Node version, shared with local via .nvmrc.
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
@@ -37,8 +35,7 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
         run: npm run build
 
-      # Contact links resolve, and the details are not readable anywhere in the
-      # output. build.sh asserts the same thing independently.
+      # build.sh asserts the same independently — keep both.
       - name: Check contact details
         env:
           WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
@@ -59,8 +56,8 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    # GitHub Pages requires its own environment, so this job cannot also
-    # target `production` — it needs no secrets, only the built artifact.
+    # Pages requires its own environment, so this job cannot also target
+    # `production`. It needs no secrets, only the artifact.
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

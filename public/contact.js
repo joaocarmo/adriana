@@ -1,12 +1,9 @@
 /* Contact reveal (REQUIREMENTS P-8).
  *
- * The number and the address are injected at build time, reversed and then
- * base64-encoded, so neither appears as machine-readable text in the page
- * source or in a search snippet. A visitor still reaches Adriana in one tap:
- * the button decodes the value and navigates straight to WhatsApp or the mail
- * client. Buttons ship disabled and are enabled here, so a page without
- * working JavaScript shows an inert control plus the <noscript> explanation
- * rather than a call to action that silently does nothing.
+ * Details are injected at build time, reversed then base64-encoded, so they are
+ * not harvestable from the page source. Buttons ship disabled: without working
+ * JavaScript a visitor gets an inert control and the <noscript> note, rather
+ * than a call to action that silently does nothing.
  */
 (function () {
   'use strict';

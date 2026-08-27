@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 #
-# Build the site into dist/: copy the sources, inject the contact details and
-# the private photograph, then verify that none of it leaked into the output.
+# Build into dist/: copy public/, inject the contact details and the private
+# photograph, then verify none of it leaked into the output.
 #
 #   WHATSAPP_NUMBER=351900000000 CONTACT_EMAIL=exemplo@exemplo.pt ./scripts/build.sh
 #
-# WHATSAPP_NUMBER and CONTACT_EMAIL are required: a page that ships with a
-# placeholder number is worse than a page that fails to build.
-# SITE_URL is optional and only affects the share preview.
-# ASSETS_KEY is required only when assets/*.enc are present.
+# WHATSAPP_NUMBER, CONTACT_EMAIL and ASSETS_KEY are required — shipping a
+# stand-in number or face is worse than failing to build. SITE_URL is optional
+# and only affects the share preview.
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -16,15 +15,12 @@ cd "$(dirname "$0")/.."
 SRC=public
 OUT=dist
 
-PLACEHOLDER_SRC=photo-placeholder.svg
-PLACEHOLDER_ALT="Fotografia provisória, a substituir pela fotografia da Adriana antes do lançamento."
+PHOTO_SRC=photo.jpg
 PHOTO_ALT="Adriana, explicadora, a sorrir para a câmara."
 
 fail() { echo "error: $*" >&2; exit 1; }
 
-# --- local convenience: .env supplies the values CI gets from secrets.
-# Anything already in the environment wins, so a one-off override still works
-# and CI (which has no .env) is unaffected.
+# .env supplies locally what CI gets from secrets. The environment wins over it.
 
 if [ -f .env ]; then
   while IFS= read -r line || [ -n "$line" ]; do
@@ -38,7 +34,7 @@ if [ -f .env ]; then
   done < .env
 fi
 
-# --- validate inputs (they come from CI secrets, so check them, don't trust them)
+# --- validate inputs: they arrive from CI secrets, so check rather than trust
 
 [ -n "${WHATSAPP_NUMBER:-}" ] || fail "WHATSAPP_NUMBER is not set"
 [ -n "${CONTACT_EMAIL:-}" ] || fail "CONTACT_EMAIL is not set"
@@ -76,19 +72,12 @@ for encrypted in assets/*.enc; do
 done
 shopt -u nullglob
 
-if [ -f "$OUT/photo.jpg" ]; then
-  PHOTO_SRC=photo.jpg
-  PHOTO_LABEL=$PHOTO_ALT
-else
-  PHOTO_SRC=$PLACEHOLDER_SRC
-  PHOTO_LABEL=$PLACEHOLDER_ALT
-  echo "warning: using the placeholder photograph — not fit to launch (REQUIREMENTS P-4)" >&2
-fi
+# Required, with no placeholder to fall back to: failing beats publishing a
+# stand-in where her face belongs (REQUIREMENTS P-4).
+[ -f "$OUT/$PHOTO_SRC" ] || fail "$PHOTO_SRC is missing — expected assets/$PHOTO_SRC.enc to decrypt into $OUT"
 
-# --- inject
-#
-# Contact details go in reversed and base64-encoded so they are not readable as
-# plain text in the served source (REQUIREMENTS P-8).
+# --- inject: reversed and base64-encoded, so the details are not readable in
+# the served source (REQUIREMENTS P-8).
 
 # `rev` terminates its output with a newline, which would survive base64 and
 # reappear inside the decoded number, so strip it.
@@ -98,19 +87,18 @@ decode() { printf '%s' "$1" | base64 -d | rev | tr -d '\n'; }
 WHATSAPP_ENC=$(encode "$WHATSAPP_DIGITS")
 EMAIL_ENC=$(encode "$CONTACT_EMAIL")
 
-# The page is worthless if these do not survive the round trip.
 [ "$(decode "$WHATSAPP_ENC")" = "$WHATSAPP_DIGITS" ] || fail "WhatsApp number does not survive encoding"
 [ "$(decode "$EMAIL_ENC")" = "$CONTACT_EMAIL" ] || fail "e-mail address does not survive encoding"
 
 # sed uses | as its delimiter below, so no injected value may contain one.
-for value in "$SITE_URL" "$PHOTO_SRC" "$PHOTO_LABEL" "$WHATSAPP_ENC" "$EMAIL_ENC"; do
+for value in "$SITE_URL" "$PHOTO_SRC" "$PHOTO_ALT" "$WHATSAPP_ENC" "$EMAIL_ENC"; do
   case "$value" in *"|"*) fail "injected values must not contain a '|' character" ;; esac
 done
 
 sed -i.bak \
   -e "s|__SITE_URL__|$SITE_URL|g" \
   -e "s|__PHOTO_SRC__|$PHOTO_SRC|g" \
-  -e "s|__PHOTO_ALT__|$PHOTO_LABEL|g" \
+  -e "s|__PHOTO_ALT__|$PHOTO_ALT|g" \
   "$OUT/index.html"
 
 sed -i.bak \
@@ -120,10 +108,7 @@ sed -i.bak \
 
 rm -f "$OUT"/*.bak
 
-# --- verify the output
-#
-# This is the check that must never regress: the contact details are the whole
-# point of the page and must not be harvestable from it.
+# --- verify: the check that must never regress.
 
 if grep -rqF -- "$CONTACT_EMAIL" "$OUT" \
   || grep -rqF -- "$WHATSAPP_DIGITS" "$OUT" \
