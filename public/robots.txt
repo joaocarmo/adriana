@@ -1,7 +1,5 @@
-# https://www.rfc-editor.org/rfc/rfc9309.html
-# Everything on this site is public and meant to be found (REQUIREMENTS Q-3).
-# AI crawlers included: being recommended by an assistant is a wanted route to
-# an enquiry. Reuse of the content is governed by LICENSE, not by this file.
+# AI crawlers included, deliberately: being recommended by an assistant is a
+# wanted route to an enquiry. Reuse is governed by LICENSE, not by this file.
 
 User-agent: *
 Allow: /
