@@ -1,17 +1,11 @@
 /*
- * Two assertions about the built site:
- *
- *   1. both buttons resolve to the real contact details, and
- *   2. those details appear nowhere in the output as readable text.
+ * Asserts that both buttons resolve to the real contact details, and that those
+ * details are readable nowhere in dist/.
  *
  *   WHATSAPP_NUMBER=... CONTACT_EMAIL=... node scripts/check-contact.mjs
  *
- * The page has exactly one piece of logic and this is it: if the decoding
- * breaks, the only call to action on the page silently stops working; if the
- * encoding breaks, her number is left out for scrapers. build.sh checks the
- * second of these too — deliberately, so neither file can quietly become the
- * only thing standing between her number and a harvester. A stub DOM is used
- * because a headless browser cannot observe a mailto: navigation.
+ * build.sh checks the leak independently — keep both, so neither is ever the
+ * only guard. Uses a stub DOM: a headless browser cannot observe mailto:.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -62,8 +56,7 @@ assert.equal(
 
 console.log('contact links resolve correctly for both channels');
 
-// Nothing in dist/ may contain the details as readable text — not the raw
-// number, not the digits-only form, not the address.
+// Raw number, digits-only form, and address must all be absent.
 const secrets = [process.env.WHATSAPP_NUMBER, number, email].filter(Boolean);
 const files = fs.readdirSync('dist', { recursive: true, withFileTypes: true })
   .filter((entry) => entry.isFile())

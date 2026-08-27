@@ -1,6 +1,5 @@
-/* Nunito Sans, self-hosted (no third-party requests — REQUIREMENTS Q-4).
-   One variable file covers both weights; latin subset only, which carries
-   every character European Portuguese needs. */
+/* Self-hosted: no third-party requests (REQUIREMENTS Q-4). One variable file
+   covers both weights; latin subset carries every character PT-PT needs. */
 @font-face {
   font-family: 'Nunito Sans';
   font-style: normal;
@@ -41,7 +40,7 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-/* Sections are the layout: one centred column, separated by space, not chrome. */
+/* Separated by space, not chrome (DESIGN.md §5). */
 section, footer {
   max-width: var(--column);
   margin-inline: auto;
@@ -61,7 +60,7 @@ ul, ol { margin: 0 0 calc(2 * var(--space)); padding-left: calc(3 * var(--space)
 li { margin-bottom: var(--space); }
 li:last-child { margin-bottom: 0; }
 
-/* Hero (P-2): everything a parent needs on the first screen, nothing else. */
+/* Hero: everything a parent needs on the first screen, nothing else (P-2). */
 .eyebrow {
   margin-bottom: var(--space);
   color: var(--accent);
@@ -84,7 +83,7 @@ li:last-child { margin-bottom: 0; }
 }
 .subjects span { color: var(--ink-soft); }
 
-/* Marker text, not just colour, so the list reads without CSS or colour vision. */
+/* A text marker, not just colour: no meaning conveyed by colour alone. */
 .facts li { padding-left: calc(3 * var(--space)); text-indent: calc(-3 * var(--space)); }
 .facts li::before { content: '— '; color: var(--accent); }
 
@@ -126,8 +125,8 @@ li:last-child { margin-bottom: 0; }
 
 address { font-style: normal; }
 
-/* Primary CTA (P-8). White on --cta-whatsapp is 4.14:1, which meets AA only at
-   WCAG "large" size, so the label is locked to 19px/700 — do not shrink it. */
+/* White on --cta-whatsapp is 4.14:1, which meets AA only at WCAG "large"
+   size. The 19px/700 label is load-bearing — do not shrink it. */
 .cta {
   display: flex;
   align-items: center;
@@ -136,8 +135,7 @@ address { font-style: normal; }
   width: 100%;
   min-height: 48px;
   padding: calc(1.5 * var(--space)) calc(3 * var(--space));
-  /* Transparent border rather than none, so both buttons share a box model
-     and end up exactly the same height. */
+  /* Transparent, not none: both buttons then share a box model and a height. */
   border: 2px solid transparent;
   border-radius: var(--radius);
   background: var(--cta-whatsapp);
@@ -198,8 +196,8 @@ footer {
   section, footer { padding: calc(9 * var(--space)) calc(3 * var(--space)); }
   .note, .facts, footer { font-size: 0.9375rem; }
   .photo { width: 220px; }
-  /* A button with width:auto shrinks to its own label, so the two would size
-     independently. Give them one explicit width and they stay identical. */
+  /* width:auto shrinks a button to its own label, sizing the two
+     independently. One explicit width keeps them identical. */
   .cta, .cta-secondary { width: 20rem; max-width: 100%; }
   .cta { display: flex; }
   .cta-secondary { margin-top: calc(2 * var(--space)); }
